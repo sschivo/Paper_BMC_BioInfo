@@ -105,7 +105,7 @@
 \begin{fmbox}
 \dochead{Methodology}
 
-\title{Building formal models of biological networks avoiding formal training}
+\title{Formal models of biological networks in ANIMO 2} %Building formal models of biological networks avoiding formal training}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                          %%
@@ -287,6 +287,7 @@ achieving useful insight without the need to study any new mathematical formalis
 
 
 \section*{Background}\label{sec:introduction}
+\subsection*{Modelling in cell biology}
 In living cells, processes are regulated by networks of interacting molecules.
 Aberrations in these networks underlie a wide range of pathologies. The development of new therapies
 requires a thorough insight in the functioning of these networks. Obtaining such insight can be a challenging task.
@@ -332,6 +333,7 @@ Most of these formal methods have been implemented into software tools to aid th
 of modelling. Due to the lack of such a supporting tool, \tas\ have remained a less 
 frequently applied method.
 
+\subsection*{\tas\ for biological models}
 \tas\ have been developed to model the dynamic behaviour of systems with processes running in parallel~\cite{timed-automata-alur-dill}. 
 As such, \tas\ have been applied in communication protocols and industrial control engineering~\cite{ta-audio-protocol,ta-wap-gateway,ta-ws-bap}. The 
 parallels between these application areas and regulatory processes in cells have triggered the step towards 
@@ -380,6 +382,8 @@ mathematical formulae. The case studies presented in the following sections are 
 for ANIMO, and aim at illustrating how a biologist can profit from the tool in its latest iteration.
 An installation manual for ANIMO 2.0 is available at \url{http://fmt.cs.utwente.nl/tools/animo/manual.html}.
 
+\subsection*{A brief introduction to ANIMO}
+{\Large [[briefly describe ANIMO, its modelling assumptions and its intended use]]}
 
 
 
@@ -409,7 +413,8 @@ by right-clicking a node in the model and disabling it. Such experiments have be
 before~\cite{drosophila-ode-model} and give similar results in our model.
 % Details of the comparison
 % between the ANIMO model and the original ODE model is given in Supplementary Section~\ref{suppl-sec:animo-drosophila}.
-
+\\
+{\Large [[Insert description of K.O. experiments with Drosophila model]]}
 
 
 
@@ -506,46 +511,42 @@ of a signal transduction network can be used to extend previous pathway topologi
 
 
 
-\subsection*{Exploiting formal methods: model checking}\label{subsec:model-checking}
-To show why one should use a formal model like \tas, we demonstrate the application
-one of the biggest advantages of \tas: state space-based analyses such as
-model checking~\cite{model-checking} provided by UPPAAL~\cite{uppaal}.
-
-The technique of model checking consists in verifying the truth of some properties
-that describe the behaviour of a model. This is usually done by exploring every
-possible evolution of the model starting from an initial state. The set of all states
-that can be reached by a model is called \emph{state space}, and formulae describing
-the evolution of a system are usually described by (a subset of) computation tree
-logic (CTL,~\cite{ctl}).
-
+\subsection*{Testing the performances of ANIMO 2.0}\label{subsec:model-checking}
 % \subsection*{Reaction-centered VS reactant-centered}\label{sec:animo-comparison}
 % We will now apply some basic model checking queries to the case study presented in~\cite{animo-bibe},
 % measuring the performances of the two modeling approaches. This will allow us to
 % evaluate the benefit brought by the shift in perspective from a reaction- to a reactant-centered model.
-
+In addition to some new features, the new ANIMO 2.0 provides a boost in terms of performances
+(see Methods section for details).
+In order to measure how significant the performance increase is, we applied a number of
+ANIMO analysis queries to a case study, comparing the performances of ANIMO 2.0 with
+the previous version of the tool. Moreover, ANIMO 2.0 provides the biolgist with
+a proper access to the formal technique of model checking~\cite{model-checking}. As we will show, the
+performance improvement is even more significant in this case, increasing
+the potential for interactivity also in this area.
 
 The case study we use as a testbed is the network model shown in the \emph{Network} panel in Figure~\ref{fig:cytoscape},
 which represents signaling events downstream of growth factors EGF (epidermal growth factor)
 and NGF (nerve growth factor) in PC12 cells (a cell line used to study neuronal differentiation).
-The model topology proposed in~\cite{egf-ngf} was analyzed
+The topology for this network was proposed in~\cite{egf-ngf}, and it was analyzed
 with an ANIMO model based on the reaction-centered approach, reproducing the experimentally 
 observed ERK (extracellular signal-regulated kinase) activity changes~\cite{animo-bibe}.
 In particular, a 10 minutes stimulation with EGF resulted in transient behavior (i.e. peak-shaped,
 see also the graph in Fig.~\ref{fig:cytoscape}), while NGF stimulation led to sustained activity (see Fig.~\ref{fig:comparison-graph-animo}).
 
-This case study will also be used to evaulate the improvement in performances introduced
-by the new version of ANIMO, which is described in the Methods section.
-
 
 \subsubsection*{Simulation-based analysis}
-We start by evaluating the cost in terms of time of simulations. This is a particularly
-important aspect to consider, as during the model building phase a user may need to perform a relatively
-large number of simulations,
-continuously adapting the topology or quantitative parameters of a network model. In order to make
-the modeling approach in ANIMO as interactive as possible, it is desirable to decrease dead times,
-and this translates into reducing the computational cost of model analysis as much as possible.
-UPPAAL's statistical model checking engine~\cite{uppaal-smc} is based on the generation of random walks (i.e., simulation runs) from a \tas\ model.
-In this experiment, we query UPPAAL for simulation runs on the models
+The most basic analysis that can be performed with ANIMO is based on simulating the behaviour
+of the network during a given period of time. As this type of analysis is also normally
+used when looking for a match between model parameters and experimental data, the computation
+speed of a simulation run deeply affects the level of interactivity perceived by the user.
+In order to make
+the modeling approach in ANIMO as smooth as possible, it is desirable to decrease dead times,
+i.e. significantly reduce simulation costs.
+% UPPAAL is used in ANIMO to obtain simulation runs from a \tas\ model. While that process is
+% very fast, 
+% In this experiment, we query UPPAAL for simulation runs on the models
+Our first experiment compares the execution time for simulation runs on the \tas\ models
 generated by ANIMO applying the reaction- and reactant-centered modeling approaches to the case study.
 To define the initial state of the model, we consider the starting condition to be the treatment with 50~ng/ml NGF, which translates into
 setting the activity level of node NGF to 15/15, while changing EGF to be at 0/15 activity. We have chosen this configuration as the
@@ -558,9 +559,26 @@ less memory. This decrease in computation time for long simulation runs brings t
 of interactive exploration of a network.
 
 
-\subsubsection*{Model checking}
-Next, we set out to test the model checking performances using the old \tas\ model used in ANIMO and
-the new one introduced in ANIMO 2. We will compare the execution times and memory requirements for a number of interesting queries:
+\subsubsection*{A good reason to use formal methods: model checking}
+% Next, we set out to test the model checking performances using the old \tas\ model used in ANIMO and
+% the new one introduced in ANIMO 2.
+To show why one should use a formal model like \tas, we demonstrate the application
+one of the biggest advantages of \tas: model checking~\cite{model-checking}.
+
+The technique of model checking consists in verifying the truth of some properties
+that describe the behaviour of a model. This is usually done by exploring every
+possible execution path of the model starting from its initial configuration. The set of all
+the configurations that can be reached by a model during all its possible executions
+is called \emph{state space}. The properties on the evolution of the model are
+usually expressed in a formal language such as computation tree logic (CTL,~\cite{ctl}),
+which allows to formally describe how and when a property should hold. Examples of such
+properties can be expressed in natural language as: ``the activity of node A
+stays always above 20'', ``it is possible to reach a state where nodes A and B are both
+active for at least 60 \%'', ``whenever node A becomes active for at least 20 \%, node
+B becomes active for at least 30 \%''.
+
+Model checking performances in ANIMO 2.0 have been tested using the case study of EGF-NGF signalling as reference.
+We compared the execution times and memory requirements in ANIMO and ANIMO 2.0 for a number of interesting queries:
 \begin{itemize}
   \item (1) and (2): {\tt A[] not deadlock}. The model continues to execute indefinitely ({\tt A} refers to all
       possible paths in the transition system of the model, and {\tt []} asks the property to always hold along a path).
@@ -616,6 +634,15 @@ leads in general to fewer events in a model, and to a smaller state space.
 
 Note that while the network we consider for the case study is not particularly large, the gain in performances is still considerable
 and promising in the perspective of analyzing more complex networks.
+
+
+
+\subsection*{Model checking for bigger models}
+When a model becomes particularly complex, with many events occurring concurrently,
+the state space of the model tends to \emph{grow exponentially} in size, dramatically
+increasing the time requested for the analysis of bigger models. To avoid the so-called
+state space explosion, an approach that is becoming popular: the so-called \emph{statistical
+model checking}.
 
 
 
