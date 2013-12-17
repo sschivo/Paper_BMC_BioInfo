@@ -41,8 +41,8 @@
 %%  submitted article.                         %%
 %%                                             %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\def\includegraphic[#1]#2{}
-\def\includegraphics[#1]#2{}
+% \def\includegraphic[#1]#2{}
+% \def\includegraphics[#1]#2{}
 
 %%% Put your definitions there:
 \startlocaldefs
@@ -325,11 +325,11 @@ In this context, we can profit from models in different ways:
 
 As models are a formalization of knowledge or theories, an underlying formalism is needed to express
 this knowledge. Different formal methods have been successfully applied to construct representations
-of biological systems. Among these methods are Boolean logic~\cite{boolean-networks-flower,boolean-networks2},
+of biological systems. Among these methods are Boolean logic~\cite{boolean-networks,boolean-networks-flower,boolean-networks2},
 ordinary differential equations (ODEs, reviewed by~\cite{hidde-review}),
 interacting state machines~\cite{interacting-sm1,interacting-sm2},
-process calculi~\cite{blenx,bio-pepa}, Timed Automata~\cite{ta-siebert,bartocci-oscillators,
-oded-ode-ta-discretization} and Petri nets~\cite{petri-nets,petri-nets2}.
+process calculi~\cite{regev-shapiro,blenx,bio-pepa}, Timed Automata~\cite{ta-siebert,bartocci-oscillators,
+oded-ode-ta-discretization} and Petri nets~\cite{petri-nets0,petri-nets,petri-nets2}.
 Most of these formal methods have been implemented into software tools to aid the process
 of modelling. Due to the lack of such a supporting tool, \tas\ have remained a less 
 frequently applied method.
@@ -632,7 +632,7 @@ makes us believe that the main gain is indeed due to the new modeling perspectiv
 
 Note that while the network we consider for the case study is not particularly large, the gain in performances is still considerable
 and promising in the perspective of analyzing more complex networks.
-{\Large [[Add some example queries for the TNFa-EGF model??]]}
+{\Large [[Add some example queries also for the TNFa-EGF model??]]}
 
 
 
@@ -673,21 +673,47 @@ initial activities can be used in \animo2{} as a basic \emph{dosage-based therap
 drugs, we can let their initial activity (which may represent drug concentration) range over different intervals, and then interrogate ANIMO
 with model checking queries to understand whether it is possible to obtain a desirable state in the network.
 
-As an example application of the statistical model checking
-approach to an ANIMO model, we introduce variability in the initial activity of TNF$\alpha$
-in the model of Figure~\ref{fig:large-model-complete}, letting it be chosen randomly on the interval $\{0, \dots, 100\}$.
-The initial activity of EGF is kept at 100/100.
-We then interrogate the model to know what is the probability that MK2 activity is higher than 40/100 before 30 minutes
-have passed. An answer is found within 9 seconds, after performing 111 simulations,
-and informs us that the probability of the requested event lies in the interval $[0.87, 0.97]$ with confidence of $0.95$.
-This implicitly tells us that the minimum activity of TNF$\alpha$ that still generates the useful result (MK2 $>$ 40/100
-in 30 minutes) lies between $100-97 = 3$ and $100-87 = 13$ with a probability of $95\%$.
-To have a more precise idea, we reduce the interval of TNF$\alpha$ to $\{0, \dots, 13\}$. After 27 seconds and 355 simulation runs,
-we obtain that the probability to activate MK2 is inside the interval $[0.62, 0.72]$ with confidence of $0.95$, which gives
-us a $95\%$ chance that the minimum amount of TNF$\alpha$ activity to activate MK2 is between $13 - 0.72 \times 13 = 4$
-and $13 - 0.62 \times 13 = 5$. Indeed, fixing the interval for TNF$\alpha$ to $\{0, 1, 2, 3\}$ gives a probability
-to activate MK2 in the interval $[0, 0.02]$ (22 seconds of computation, 263 runs, $0.99\%$ confidence), while choosing an interval of $\{4, 5, 6, 7 \}$
-gives a probability in $[0.98,1]$ (22 seconds, 263 runs, $0.99\%$ confidence).
+Please note that having included non-deterministic behavior in a model does not imply that only
+statistical model checking is feasible. It is however true that non-determinism can significantly increase the size
+of the state space: for example, if we let the initial activity of TNF$\alpha$ in the model of Figure~\ref{fig:large-model-complete}
+vary in the interval $\{1, \dots, 100\}$, the size of the state space for that model increases by a factor of 100.
+In that case, it is indeed true that exact model checking cannot visit the whole state space without increasing the level
+of abstraction in the model. 
+It is however still possible to obtain (true) answers to reachability-based queries in
+a small amount of time: if in the setting of the example we ask the query ``It is possible to reach a state in which
+MK2 is active for more than 40/100 within 30 minutes'', the answer is found to be true in 0.6 seconds. However, no
+answer can be found in reasonable time if the query asks for an activity of 90/100.
+This query would be evaluated to false: as we know from the behavior of the deterministic version of the model with 100 ng/ml TNF$\alpha$ as input,
+MK2 activity never goes above 50 (see Suppl. Figure~\ref{fig:differences1}). In order to find the negative answer
+to that second query, the model checker would need to explore the whole state space,
+which would require a large amount of computational resources. Still, an approximated
+answer for both queries can be found within 4 seconds if formulated in a probabilistic way ``What is the probability
+to reach a state in which MK2 is active for more than X/100 within 30 minutes?''. In the first case (MK2 activity $>$ 40), the answer would
+be a probability in the interval $[0.90, 1]$, while in the second case (MK2 activity $>$ 90) the probability would be in $[0, 0.05]$.
+
+% , while probabilistic queries can still be answered within a minute.
+% If the choice for TNF$\alpha$ is made instead more restricted (for example, in the interval $\{5, \dots, 10\}$),
+% it is still possible to answer exact model checking queries (the property asking
+% whether a state in which MK2 is active for more than 40/100 within 30 minutes is found true in 0.6 seconds). The corresponding statistical
+% model checking query can be solved faster, but at the expense of approximation (the probability that
+% MK2 gets activated to more than 40/100 before 30 minutes is believed to be inside the interval $[0.87, 0.97]$
+% with a confidence of $0.95$, and the result was obtained within 8 seconds performing 111 simulation runs).
+
+% As an example application of the statistical model checking
+% approach to an ANIMO model, we introduce variability in the initial activity of TNF$\alpha$
+% in the model of Figure~\ref{fig:large-model-complete}, letting it be chosen randomly on the interval $\{0, \dots, 100\}$.
+% The initial activity of EGF is kept at 100/100.
+% We then interrogate the model to know what is the probability that MK2 activity is higher than 40/100 before 30 minutes
+% have passed. An answer is found within 9 seconds, after performing 111 simulations,
+% and informs us that the probability of the requested event lies in the interval $[0.87, 0.97]$ with confidence of $0.95$.
+% This implicitly tells us that the minimum activity of TNF$\alpha$ that still generates the useful result (MK2 $>$ 40/100
+% in 30 minutes) lies between $100-97 = 3$ and $100-87 = 13$ with a probability of $95\%$.
+% To have a more precise idea, we reduce the interval of TNF$\alpha$ to $\{0, \dots, 13\}$. After 27 seconds and 355 simulation runs,
+% we obtain that the probability to activate MK2 is inside the interval $[0.62, 0.72]$ with confidence of $0.95$, which gives
+% us a $95\%$ chance that the minimum amount of TNF$\alpha$ activity to activate MK2 is between $13 - 0.72 \times 13 = 4$
+% and $13 - 0.62 \times 13 = 5$. Indeed, fixing the interval for TNF$\alpha$ to $\{0, 1, 2, 3\}$ gives a probability
+% to activate MK2 in the interval $[0, 0.02]$ (22 seconds of computation, 263 runs, $0.99\%$ confidence), while choosing an interval of $\{4, 5, 6, 7 \}$
+% gives a probability in $[0.98,1]$ (22 seconds, 263 runs, $0.99\%$ confidence).
 % If we lower the maximum amount of TNF$\alpha$ to 10, however, we obtain that 
 % Obtaining an answer to the corresponding exact query (``is it possible to reach a state in which MK2 is active
 % before 40 minutes?'') would take too long even if using the new model introduced in \animo2{}.
@@ -1176,6 +1202,7 @@ We would like to thank Christof Francke for valuable discussions.
 %%
 %% Do not use \listoffigures as most will included as separate files
 
+\clearpage
 \section*{Figures}
 %   \begin{figure}[h!]
 %   \caption{\csentence{Sample figure title.}
@@ -1197,80 +1224,98 @@ We would like to thank Christof Francke for valuable discussions.
 % \end{figure}
 
 
-\def\mekTA{\includegraphics[scale=.098]{images/abstraction_ta_erk3}}
-\newlength\mekTAheight
-\setlength\mekTAheight{\heightof{\mekTA}}
-\begin{figure}[!hb]
-%\begin{minipage}{\textwidth}
+\begin{figure}[htbp]
 \begin{center}
-\subfloat[\label{subfig:mek-erk}]{\begin{minipage}[c][\mekTAheight]{0.13\textwidth}\begin{center}\includegraphics[scale=.098]{images/abstraction_ta_mek-erk3}\end{center}\end{minipage}}
-\qquad
-\subfloat[\label{subfig:mek}]{\begin{minipage}[c][\mekTAheight]{0.13\textwidth}\begin{center}\includegraphics[scale=.098]{images/abstraction_ta_mek}\end{center}\end{minipage}}
-\qquad
-\subfloat[\label{subfig:erk}]{\begin{minipage}[c][\mekTAheight]{0.14\textwidth}\begin{center}\mekTA\end{center}\end{minipage}}
+   \includegraphics[width=.48\textwidth]{images/screenshotMAPKmodel}
 \end{center}
-\caption{Formalization of an activation interaction into a \tas\ model.
-{\bf \protect\subref{subfig:mek-erk}}~Classical depiction of a well-studied intracellular signal transduction 
-interaction: MEK activates downstream protein ERK.
-{\bf \protect\subref{subfig:mek}}~A \ta\ model of MEK, consisting of a single location (circle, active\_MEK) and 
-a single transition (arrow). In this example, MEK activity is not regulated and MEK is always active. ${\sf t} < 20$ 
-is termed an invariant on the location, allowing residence in this location as long as local
-clock time {\sf t} is smaller than $20$ units. ${\sf t} > 18$ is termed a guard on the transition, allowing the
-transition to take place when local clock {\sf t} is greater than $18$ units. Together, the invariant and guard
-ensure that the transition must take place within the continuous time interval $18 < {\sf t} < 20$. When the
-transition takes place, the action {\sf activate\_ERK!} is performed and the local clock is reset, ${\sf t} := 0$.
-{\bf \protect\subref{subfig:erk}}~A \ta\ model of ERK, consisting of three locations, {\sf inactive\_ERK}
-(the starting location, indicated by a double circle), {\sf 50\%\_active\_ERK} and {\sf 100\%\_active\_ERK},
-and two transitions between the locations. Here, ERK has three activity levels: completely inactive, halfway active
-and completely active.
-A transition will take place when it is possible to synchronize with
-the corresponding action {\sf activate\_ERK!} in the MEK automaton.
-Each synchronization on channel {\sf activate\_ERK} represents the occurrence of the activating
-interaction between MEK and ERK, and allows ERK to eventually become completely active. If we 
-replace the time constraints for the occurrence of {\sf activate\_ERK!} with variables depending
-on scenario~1 ($R = k \times [MEK]$), the second activation step would have the same time 
-constraints as the first activation step, since the interaction rate only depends on MEK. If we use scenario~2
-($R = k \times [MEK] \times [1 - ERK]$) instead, the time constraints are doubled after the first activation step, because only
-50 \% of inactive ERK is left. The second activation step would then take twice the time of the first step.
-}\label{fig:abstraction-mek-erk}
-%\end{minipage}
+\caption{The Cytoscape user interface running the ANIMO plug-in
+(model presented in~\cite{animo-bibe}). The \emph{Network} panel in the center contains the nodes-edges
+model of the cross-talking signaling pathways of NGF and EGF, with
+colors indicating node activity levels and shapes representing different protein categories (see the \emph{Legend} on the left).
+The \emph{Results Panel} on the right contains a graph plotting activity levels of selected nodes
+during the first hour of evolution of the model. The slider under the graph
+allows the user to select the time instant (marked as a vertical red line in the graph) on which
+the colors nodes in the \emph{Network} are based.
+The series with the {\sf \_data} suffix is experimental
+data from~\cite{egf-ngf}, considering a treatment with 100~ng/ml EGF.
+\label{fig:cytoscape}}
 \end{figure}
 
 
-\def\modelGraphScale{0.2}%0.148}%0.215}
-\def\legendGraphScale{0.23}%0.16}
-\def\halfGraphScale{0.09}%0.067}%0.1075}
-\begin{figure}[!bhtp]
-\centering
-\begin{tabular}{ll}
-\subfloat{\includegraphics[scale=\legendGraphScale]{images/small-model-1g_legenda}}\addtocounter{subfigure}{-1}\subfloat[\label{fig:small-model-first}]{\includegraphics[scale=\modelGraphScale]{images/00-paper-model1f}}
-& \subfloat[\label{fig:small-model-first-graph}]{\includegraphics[scale=\halfGraphScale]{images/00-paper-graph1m_riga}} \\[5ex]
-\subfloat[\label{fig:small-model-third}]{\qquad\includegraphics[scale=\modelGraphScale]{images/00-paper-model3f}}
-& \subfloat[\label{fig:small-model-third-graph}]{\includegraphics[scale=\halfGraphScale]{images/00-paper-graph3n_riga}} \\[5ex]
-\subfloat[\label{fig:small-model-fourth}]{\includegraphics[scale=\modelGraphScale]{images/00-paper-model4g}}
-& \subfloat[\label{fig:small-model-fourth-graph}]{\includegraphics[scale=\halfGraphScale]{images/00-paper-graph4o_riga}}
-\end{tabular}
-  \caption{
-Incremental construction of an ANIMO model of signal transduction
-events in human colon carcinoma cells upon stimulation with 100 ng/ml TNF$\alpha$.
-Each construction step (top to bottom) is simulated in ANIMO, giving intermediate feedback
-useful for the piecewise refinement of the model.
-The graphs on the right show the dynamic behavior of the corresponding models on the left, comparing it to the measured
-activity values by~\cite{pathway-compendium} (error bars represent the standard deviation).
-On the vertical axis, ``100'' represents the maximum protein activity in the complete experiment.
-The red vertical line in each graph indicates a selected time point in the time course. 
-Nodes in the corresponding network representation are colored according to their activity at that time point.
-All images in this figure are taken from the ANIMO user interface.
-{\bf (\protect\subref*{fig:small-model-first}, \protect\subref*{fig:small-model-first-graph})}~Basic model showing direct activation of JNK1 and MK2 by TNF$\alpha$.
-No peak dynamics are observed because no inactivating processes are present.
-{\bf (\protect\subref*{fig:small-model-third}, \protect\subref*{fig:small-model-third-graph})}~The model after addition of inactivating phosphatases and a
-negative feedback loop that down-regulates TNFR. Note that adding TNFR internalization or phosphatases alone would not be enough to reproduce activity peaks.
-{\bf (\protect\subref*{fig:small-model-fourth}, \protect\subref*{fig:small-model-fourth-graph})}~The model after addition of IKK, IL1-secretion (abstracting
-the autocrine IL-1 signaling described by~\cite{pathway-autocrine}), Casp8 and Casp3, showing the late response to TNF$\alpha$ signaling.\\
-The {\sf \_{}data} suffix identifies experimental data; all other series are computed by ANIMO.\\
-As the data set did not contain values for cleaved caspase-3, but only for its non-cleaved precursor pro-caspase-3,
-we computed the {\sf Casp3\_{}data} series as $100\% - [\mbox{\sf pro-Casp3}]$.}\label{fig:small-model}
-\end{figure}
+% \def\mekTA{\includegraphics[scale=.098]{images/abstraction_ta_erk3}}
+% \newlength\mekTAheight
+% \setlength\mekTAheight{\heightof{\mekTA}}
+% \begin{figure}[!hb]
+% %\begin{minipage}{\textwidth}
+% \begin{center}
+% \subfloat[\label{subfig:mek-erk}]{\begin{minipage}[c][\mekTAheight]{0.13\textwidth}\begin{center}\includegraphics[scale=.098]{images/abstraction_ta_mek-erk3}\end{center}\end{minipage}}
+% \qquad
+% \subfloat[\label{subfig:mek}]{\begin{minipage}[c][\mekTAheight]{0.13\textwidth}\begin{center}\includegraphics[scale=.098]{images/abstraction_ta_mek}\end{center}\end{minipage}}
+% \qquad
+% \subfloat[\label{subfig:erk}]{\begin{minipage}[c][\mekTAheight]{0.14\textwidth}\begin{center}\mekTA\end{center}\end{minipage}}
+% \end{center}
+% \caption{Formalization of an activation interaction into a \tas\ model.
+% {\bf \protect\subref{subfig:mek-erk}}~Classical depiction of a well-studied intracellular signal transduction 
+% interaction: MEK activates downstream protein ERK.
+% {\bf \protect\subref{subfig:mek}}~A \ta\ model of MEK, consisting of a single location (circle, active\_MEK) and 
+% a single transition (arrow). In this example, MEK activity is not regulated and MEK is always active. ${\sf t} < 20$ 
+% is termed an invariant on the location, allowing residence in this location as long as local
+% clock time {\sf t} is smaller than $20$ units. ${\sf t} > 18$ is termed a guard on the transition, allowing the
+% transition to take place when local clock {\sf t} is greater than $18$ units. Together, the invariant and guard
+% ensure that the transition must take place within the continuous time interval $18 < {\sf t} < 20$. When the
+% transition takes place, the action {\sf activate\_ERK!} is performed and the local clock is reset, ${\sf t} := 0$.
+% {\bf \protect\subref{subfig:erk}}~A \ta\ model of ERK, consisting of three locations, {\sf inactive\_ERK}
+% (the starting location, indicated by a double circle), {\sf 50\%\_active\_ERK} and {\sf 100\%\_active\_ERK},
+% and two transitions between the locations. Here, ERK has three activity levels: completely inactive, halfway active
+% and completely active.
+% A transition will take place when it is possible to synchronize with
+% the corresponding action {\sf activate\_ERK!} in the MEK automaton.
+% Each synchronization on channel {\sf activate\_ERK} represents the occurrence of the activating
+% interaction between MEK and ERK, and allows ERK to eventually become completely active. If we 
+% replace the time constraints for the occurrence of {\sf activate\_ERK!} with variables depending
+% on scenario~1 ($R = k \times [MEK]$), the second activation step would have the same time 
+% constraints as the first activation step, since the interaction rate only depends on MEK. If we use scenario~2
+% ($R = k \times [MEK] \times [1 - ERK]$) instead, the time constraints are doubled after the first activation step, because only
+% 50 \% of inactive ERK is left. The second activation step would then take twice the time of the first step.
+% }\label{fig:abstraction-mek-erk}
+% %\end{minipage}
+% \end{figure}
+
+
+% \def\modelGraphScale{0.2}%0.148}%0.215}
+% \def\legendGraphScale{0.23}%0.16}
+% \def\halfGraphScale{0.09}%0.067}%0.1075}
+% \begin{figure}[!bhtp]
+% \centering
+% \begin{tabular}{ll}
+% \subfloat{\includegraphics[scale=\legendGraphScale]{images/small-model-1g_legenda}}\addtocounter{subfigure}{-1}\subfloat[\label{fig:small-model-first}]{\includegraphics[scale=\modelGraphScale]{images/00-paper-model1f}}
+% & \subfloat[\label{fig:small-model-first-graph}]{\includegraphics[scale=\halfGraphScale]{images/00-paper-graph1m_riga}} \\[5ex]
+% \subfloat[\label{fig:small-model-third}]{\qquad\includegraphics[scale=\modelGraphScale]{images/00-paper-model3f}}
+% & \subfloat[\label{fig:small-model-third-graph}]{\includegraphics[scale=\halfGraphScale]{images/00-paper-graph3n_riga}} \\[5ex]
+% \subfloat[\label{fig:small-model-fourth}]{\includegraphics[scale=\modelGraphScale]{images/00-paper-model4g}}
+% & \subfloat[\label{fig:small-model-fourth-graph}]{\includegraphics[scale=\halfGraphScale]{images/00-paper-graph4o_riga}}
+% \end{tabular}
+%   \caption{
+% Incremental construction of an ANIMO model of signal transduction
+% events in human colon carcinoma cells upon stimulation with 100 ng/ml TNF$\alpha$.
+% Each construction step (top to bottom) is simulated in ANIMO, giving intermediate feedback
+% useful for the piecewise refinement of the model.
+% The graphs on the right show the dynamic behavior of the corresponding models on the left, comparing it to the measured
+% activity values by~\cite{pathway-compendium} (error bars represent the standard deviation).
+% On the vertical axis, ``100'' represents the maximum protein activity in the complete experiment.
+% The red vertical line in each graph indicates a selected time point in the time course. 
+% Nodes in the corresponding network representation are colored according to their activity at that time point.
+% All images in this figure are taken from the ANIMO user interface.
+% {\bf (\protect\subref*{fig:small-model-first}, \protect\subref*{fig:small-model-first-graph})}~Basic model showing direct activation of JNK1 and MK2 by TNF$\alpha$.
+% No peak dynamics are observed because no inactivating processes are present.
+% {\bf (\protect\subref*{fig:small-model-third}, \protect\subref*{fig:small-model-third-graph})}~The model after addition of inactivating phosphatases and a
+% negative feedback loop that down-regulates TNFR. Note that adding TNFR internalization or phosphatases alone would not be enough to reproduce activity peaks.
+% {\bf (\protect\subref*{fig:small-model-fourth}, \protect\subref*{fig:small-model-fourth-graph})}~The model after addition of IKK, IL1-secretion (abstracting
+% the autocrine IL-1 signaling described by~\cite{pathway-autocrine}), Casp8 and Casp3, showing the late response to TNF$\alpha$ signaling.\\
+% The {\sf \_{}data} suffix identifies experimental data; all other series are computed by ANIMO.\\
+% As the data set did not contain values for cleaved caspase-3, but only for its non-cleaved precursor pro-caspase-3,
+% we computed the {\sf Casp3\_{}data} series as $100\% - [\mbox{\sf pro-Casp3}]$.}\label{fig:small-model}
+% \end{figure}
 
 
 \def\drosophilaGraphScale{0.069}%0.123}
@@ -1342,22 +1387,6 @@ The {\sf \_{}data} suffix identifies experimental data; all other series are com
 
 
 
-\begin{figure}[htbp]
-\begin{center}
-   \includegraphics[width=.48\textwidth]{images/screenshotMAPKmodel}
-\end{center}
-\caption{The Cytoscape user interface running the ANIMO plug-in
-(image from~\cite{animo-bibe}). The \emph{Network} panel in the center contains the nodes-edges
-model of the cross-talking signaling pathways of NGF and EGF, with
-colors indicating node activity levels and shapes representing different protein categories (see the \emph{Legend} on the left).
-The \emph{Results Panel} on the right contains a graph plotting activity levels of selected nodes
-during the first hour of evolution of the model. The slider under the graph
-allows the user to select the time instant (marked as a vertical red line in the graph) on which
-the colors nodes in the \emph{Network} are based.
-The series with the {\sf \_data} suffix is experimental
-data from~\cite{egf-ngf}, considering a treatment with 100~ng/ml EGF.
-\label{fig:cytoscape}}
-\end{figure}
 
 
 \def\scalaOldModel{0.25}
@@ -1382,7 +1411,7 @@ the reactant-centered model as the algebraic sum of the reactions influencing $A
 The templates have been edited for an easier visual comparison. Functions {\sf react()}, {\sf can\_react()} and {\sf cant\_react()}
 in~{\protect\subref{fig:ta-new-model}} have the same content as the corresponding guards and updates in ({\bf\protect\subref*{fig:ta-old-BA}\--{}\protect\subref*{fig:ta-old-DA}}),
 while function {\sf update()} in~{\protect\subref{fig:ta-new-model}}
-replaces the references to the pre-computed tables {\sf tL[]}, {\sf tU[]} with on-the-fly computation (see Sect.~\ref{sec:rates-ta-model}).
+replaces the references to the pre-computed tables {\sf tL[]}, {\sf tU[]} with on-the-fly computation.
 % \ta\ template used to represent a net reaction in the reactant-centered model.
 \label{fig:ta-models}}
 \end{figure}
@@ -1418,6 +1447,7 @@ replaces the references to the pre-computed tables {\sf tL[]}, {\sf tU[]} with o
 
 %% Use of \listoftables is discouraged.
 %%
+\clearpage
 \section*{Tables}
 % \begin{table}[h!]
 % \caption{Sample table title. This is where the description of the table should go.}
@@ -1454,6 +1484,7 @@ replaces the references to the pre-computed tables {\sf tL[]}, {\sf tU[]} with o
   of the EGF/NGF model with ANIMO 1.0 and 0.028 seconds to compute the same result with \animo2{}.\label{tab:sim-100}}
 \end{table}
 
+% \vspace{2cm}
 
 
 \begin{table*}[h!]
@@ -1485,6 +1516,8 @@ replaces the references to the pre-computed tables {\sf tL[]}, {\sf tU[]} with o
   the given queries on the case study from~\cite{animo-bibe}.\label{tab:model-checking}}
 \end{table*}
 
+% \vspace{2cm}
+
 
 \begin{table}[h!]
 \scriptsize
@@ -1514,6 +1547,8 @@ replaces the references to the pre-computed tables {\sf tL[]}, {\sf tU[]} with o
   \label{tab:model-checking-templates}}
 \end{table}
 
+% \vspace{2cm}
+
 
 
 \newcolumntype{x}[1]{%
@@ -1521,9 +1556,6 @@ replaces the references to the pre-computed tables {\sf tL[]}, {\sf tU[]} with o
 % \savenotes
 \begin{table}[!hbt]
 \begin{minipage}{\textwidth}
-\caption{Comparison between ANIMO and some existing approaches to modeling biological systems.
-A ``Yes'' under a column indicates that the modeling tool (mostly) fulfills the parameter, ``No'' indicates very limited or no fulfillment.\\
-\label{tab:tool-comparison}}
 \begin{center}
 {\scriptsize \begin{tabular}{p{3cm}p{1.2cm}p{1.1cm}p{1.2cm}p{1cm}p{1cm}p{1cm}}
 \hline \ \\
@@ -1549,25 +1581,26 @@ COSBI LAB~$^1$
 GINsim~\cite{ginsim} & Boolean Networks & No & Yes & Yes & Yes & Yes~$^2$
       \\[5mm]
 % \noalign{\vskip 2mm} 
-GNA~\cite{gna}    & ODE & No & Yes & Yes & Yes & No~$^3$
+GNA~\cite{gna}    & PLDE & No & Yes & Yes & Yes & Yes~$^2$
       \\
 % \noalign{\vskip 2mm} 
-Rhapsody~$^4$
- & Statecharts & No & Yes & Yes & No~$^5$ & No
+Rhapsody~$^3$
+ & Statecharts & No & Yes & Yes & No~$^4$ & No
       \\[5mm]
 \hline \ \\
 \end{tabular}}
 \end{center}
-
-{\scriptsize $^1$ {COSBILab} web page \url{http://www.cosbi.eu/index.php/research/cosbi-lab}\\
+\end{minipage}
+\caption{Comparison between ANIMO and some existing approaches to modeling biological systems.
+A ``Yes'' under a column indicates that the modeling tool (mostly) fulfills the parameter, ``No'' indicates very limited or no fulfillment.\\
+$^1$ {COSBILab} web page \protect\url{http://www.cosbi.eu/index.php/research/cosbi-lab}\\
 $^2$ The user can choose the number of levels for each reactant, allowing to define
 multi-level models based on Boolean reaction dynamics.\\
-$^3$ When discretizing an ODE model, the granularity depends on the mathematical
-features of the model, and not directly on the user's choice.\\
-$^4$ {IBM Rational Rhapsody} web page \url{http://www-01.ibm.com/software/rational/products/rhapsody/designer}\\
-$^5$ Statecharts represent more closely the so-called
-\emph{transition system} of the model as opposed to the components and interactions occurring among them.}
-\end{minipage}
+% $^3$ When discretizing an ODE model, the granularity depends on the mathematical
+% features of the model, and not directly on the user's choice.\\
+$^3$ {IBM Rational Rhapsody} web page \protect\url{http://www-01.ibm.com/software/rational/products/rhapsody/designer}\\
+$^4$ Statecharts represent more closely the so-called \protect\emph{transition system} of the model as opposed to the components and interactions occurring among them.
+\label{tab:tool-comparison}}
 \end{table}
 
 
@@ -1576,6 +1609,8 @@ $^5$ Statecharts represent more closely the so-called
 %% Additional Files              %%
 %%                               %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\clearpage
 
 \section*{Additional Files}
   \subsection*{Additional file 1 --- Sample additional file title}
@@ -1590,7 +1625,7 @@ $^5$ Statecharts represent more closely the so-called
 \end{backmatter}
 
 
-\end{document}
+%\end{document}
 
 \appendix
 \clearpage
@@ -1604,19 +1639,19 @@ $^5$ Statecharts represent more closely the so-called
 % \setlength{\evensidemargin}{1.875in}
 % \addtolength{\textwidth}{-3.75in}
 
-\newlength\addedmarginsingle
-\setlength\addedmarginsingle{0.875in}
-\newlength\addedmargintotal
-\setlength\addedmargintotal{2\addedmarginsingle}
-
-\addtolength{\oddsidemargin}{\addedmarginsingle}
-\addtolength{\evensidemargin}{\addedmarginsingle}
-\addtolength{\textwidth}{-\addedmargintotal}
-\addtolength{\linewidth}{-\addedmargintotal}
-\addtolength{\hsize}{-\addedmargintotal}
-\addtolength{\topmargin}{\addedmarginsingle}
-\addtolength{\textheight}{-\addedmargintotal}
-\addtolength{\vsize}{-\addedmargintotal}
+% \newlength\addedmarginsingle
+% \setlength\addedmarginsingle{0.875in}
+% \newlength\addedmargintotal
+% \setlength\addedmargintotal{2\addedmarginsingle}
+% 
+% \addtolength{\oddsidemargin}{\addedmarginsingle}
+% \addtolength{\evensidemargin}{\addedmarginsingle}
+% \addtolength{\textwidth}{-\addedmargintotal}
+% \addtolength{\linewidth}{-\addedmargintotal}
+% \addtolength{\hsize}{-\addedmargintotal}
+% \addtolength{\topmargin}{\addedmarginsingle}
+% \addtolength{\textheight}{-\addedmargintotal}
+% \addtolength{\vsize}{-\addedmargintotal}
 
 \pagestyle{plain}
 
@@ -1661,7 +1696,7 @@ $^5$ Statecharts represent more closely the so-called
 {\titlerule*[1pc]{.}\contentspage}
 % Copied from article.cls
 %\setcounter{tocdepth}{5}
-\newcommand\tableofcontents{%
+\renewcommand\tableofcontents{%
 \begin{spacing}{1.3}
     \section*{\contentsname
         \@mkboth{%
